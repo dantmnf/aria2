@@ -220,6 +220,8 @@ extern PrefPtr PREF_MAX_FILE_NOT_FOUND;
 extern PrefPtr PREF_EVENT_POLL;
 // value: true | false
 extern PrefPtr PREF_ENABLE_RPC;
+// value: string that your file system recognizes as a directory.
+extern PrefPtr PREF_RPC_STATIC_FILE;
 // value: 1*digit
 extern PrefPtr PREF_RPC_LISTEN_PORT;
 // value: string

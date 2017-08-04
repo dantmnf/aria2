@@ -841,6 +841,9 @@
 #define TEXT_RPC_LISTEN_PORT                                        \
   _(" --rpc-listen-port=PORT       Specify a port number for JSON-RPC/XML-RPC server\n" \
     "                              to listen to.")
+#define TEXT_RPC_STATIC_FILE                                               \
+  _(" --rpc-static-file=DIR        Use RPC server to serve static files in DIR.\n" \
+    "                              WITH VERY SIMPLE AND NAIVE APPROACH.")
 #define TEXT_SHOW_CONSOLE_READOUT                                       \
   _(" --show-console-readout[=true|false] Show console readout.")
 #define TEXT_METALINK_BASE_URI                  \

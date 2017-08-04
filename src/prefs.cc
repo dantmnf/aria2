@@ -267,6 +267,8 @@ PrefPtr PREF_MAX_FILE_NOT_FOUND = makePref("max-file-not-found");
 PrefPtr PREF_EVENT_POLL = makePref("event-poll");
 // value: true | false
 PrefPtr PREF_ENABLE_RPC = makePref("enable-rpc");
+// value: string that your file system recognizes as a directory.
+PrefPtr PREF_RPC_STATIC_FILE = makePref("rpc-static-file");
 // value: 1*digit
 PrefPtr PREF_RPC_LISTEN_PORT = makePref("rpc-listen-port");
 // value: string

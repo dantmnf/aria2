@@ -64,6 +64,9 @@
 #include "XmlRpcRequestParserStateMachine.h"
 #include "XmlRpcDiskWriter.h"
 #endif // ENABLE_XML_RPC
+#include "File.h"
+#include "BufferedFile.h"
+#include "Option.h"
 
 namespace aria2 {
 
@@ -169,6 +172,31 @@ void HttpServerBodyCommand::updateWriteCheck()
   else if (writeCheck_) {
     writeCheck_ = false;
     e_->deleteSocketForWriteCheck(socket_, this);
+  }
+}
+
+static std::map<std::string, const char*> suffixToContentType = {
+  {"htm",  "text/html"},
+  {"html", "text/html"},
+  {"js",   "application/javascript"},
+  {"css",  "text/css"},
+  {"txt",  "text/plain"},
+  {"jpg",  "image/jpeg"},
+  {"jpeg", "image/jpeg"},
+  {"png",  "image/png"},
+  {"gif",  "image/gif"},
+  {"webp", "image/webp"},
+  {"svg",  "image/svg+xml"},
+  {"svgz", "image/svg+xml"},
+};
+
+static std::string getContentTypeFromSuffix(const std::string& suffix) {
+  auto it = suffixToContentType.find(suffix);
+  if (it != suffixToContentType.end()) {
+    std::string result(it->second);
+    return result;
+  } else {
+    return "application/octet-stream";
   }
 }
 
@@ -311,7 +339,42 @@ bool HttpServerBodyCommand::execute()
           return true;
         }
         default:
-          httpServer_->feedResponse(404);
+          Option* opt = e_->getOption();
+          auto staticDir = opt->get(PREF_RPC_STATIC_FILE);
+          auto filename = staticDir + reqPath;
+		      bool foundFile = true;
+          do {
+            if (File(filename).exists() && !File(filename).isDir()) {
+              break;
+            }
+            if (*reqPath.crbegin() == '/') {
+              auto indexfile = filename + "index.html";
+              if (File(indexfile).exists()) {
+                filename = indexfile;
+                break;
+              }
+              indexfile = filename + "index.htm";
+              if (File(indexfile).exists()) {
+                filename = indexfile;
+                break;
+              }
+            }
+            foundFile = false;
+          } while (false);
+          if (foundFile) {
+            auto suffix = filename.substr(filename.rfind('.') + 1);
+            auto contentType = getContentTypeFromSuffix(suffix);
+            A2_LOG_INFO(fmt("Serving static file %s with content type %s", filename.c_str(), contentType.c_str()));
+            BufferedFile fp(filename.c_str(), BufferedFile::READ);
+            std::stringstream ss;
+            fp.transfer(ss);
+            bool gzip = httpServer_->supportsGZip();
+            if (gzip) httpServer_->disableGZip();
+            httpServer_->feedResponse(200, "", std::move(ss.str()), contentType);
+            if (gzip) httpServer_->enableGZip();
+          } else {
+            httpServer_->feedResponse(404);
+          }
           addHttpServerResponseCommand(false);
           return true;
         }
